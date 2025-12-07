@@ -37,39 +37,11 @@ func init() {
 
 // runCreate scaffolds the project structure with directories, files, and templates.
 func runCreate(appName string) error {
-	baseDir := appName
-	directories := []string{
-		baseDir,
-		baseDir + "/app",
-		baseDir + "/app/src",
-		baseDir + "/app/tests",
-		baseDir + "/infra",
-		baseDir + "/infra/src",
-		baseDir + "/infra/tests",
+	if err := createDirectory(appName); err != nil {
+		return err
 	}
 
-	files := []string{
-		baseDir + "/.gitignore",
-		baseDir + "/README.md",
-		baseDir + "/app/pyproject.toml",
-		baseDir + "/app/Dockerfile",
-		baseDir + "/app/docker-compose.yml",
-		baseDir + "/infra/pyproject.toml",
-	}
-
-	for _, directory := range directories {
-		if err := createDirectory(directory); err != nil {
-			return err
-		}
-	}
-
-	for _, file := range files {
-		if err := createFile(file, []byte{}); err != nil {
-			return err
-		}
-	}
-
-	if err := createTemplates(baseDir); err != nil {
+	if err := createTemplates(appName); err != nil {
 		return err
 	}
 
