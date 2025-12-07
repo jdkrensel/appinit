@@ -42,6 +42,22 @@ my-app/
 └── README.md
 ```
 
+## Setup
+
+If using Cursor or VS Code:
+
+1. Open the workspace file (`repo.code-workspace`) in Cursor/VS Code
+2. Install app dependencies: `cd app && uv sync && cd ..`
+3. Install infra dependencies: `cd infra && uv sync && cd ..`
+4. Select interpreters for each folder:
+   - App: `app/.venv/bin/python`
+   - Infra: `infra/.venv/bin/python`
+
+Install AWS CDK (for deploying infrastructure):
+```bash
+npm install -g aws-cdk
+```
+
 ## Development
 
 ```bash
