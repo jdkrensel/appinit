@@ -1,0 +1,13 @@
+// Optional workspace file for Cursor/VS Code users.
+// Purpose: enables separate Python interpreters for `app` and `infra`
+// via multi-root workspace folders, while still showing all files at
+// the repository root. Safe to delete if not using a VS Code variant.
+{
+    "folders": [
+      { "name": "root", "path": "." },
+      { "name": "app", "path": "app" },
+      { "name": "infra", "path": "infra" }
+    ],
+    "settings": {}
+  }
+  

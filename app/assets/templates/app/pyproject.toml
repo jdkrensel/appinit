@@ -2,10 +2,7 @@
 name = ""
 version = "0.1.0"
 requires-python = ">=3.14"
-dependencies = [
-    "aws-cdk-lib>=2.232.1",
-    "constructs>=10.4.3",
-]
+dependencies = []
 
 [dependency-groups]
 dev = [

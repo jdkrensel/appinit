@@ -96,6 +96,26 @@ func runCreate() error {
 			return err
 		}
 
+		// Create missing directories and __init__.py files
+		if err := createDirectory(appName + "/app/tests"); err != nil {
+			return err
+		}
+		if err := createFile(appName+"/app/tests/__init__.py", []byte{}); err != nil {
+			return err
+		}
+		if err := createDirectory(appName + "/infra/stacks"); err != nil {
+			return err
+		}
+		if err := createFile(appName+"/infra/stacks/__init__.py", []byte{}); err != nil {
+			return err
+		}
+		if err := createDirectory(appName + "/infra/tests"); err != nil {
+			return err
+		}
+		if err := createFile(appName+"/infra/tests/__init__.py", []byte{}); err != nil {
+			return err
+		}
+
 		slog.Info("project structure created successfully", "name", appName)
 	}
 	return nil
