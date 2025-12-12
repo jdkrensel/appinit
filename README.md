@@ -48,20 +48,51 @@ my-app/
 └── README.md
 ```
 
-## Setup
+## Development Setup
 
-If using Cursor or VS Code:
+### For appinit CLI Development
 
-1. Open the workspace file (`repo.code-workspace`) in Cursor/VS Code
-2. Install app dependencies: `cd app && uv sync && cd ..`
-3. Install infra dependencies: `cd infra && uv sync && cd ..`
-4. Select interpreters for each folder:
-   - App: `app/.venv/bin/python`
-   - Infra: `infra/.venv/bin/python`
+1. Clone the repository
+2. Build and test locally:
+   ```bash
+   go run main.go create --name test-app
+   DEBUG=1 go run main.go create --name test-app  # with debug logging
+   ```
 
-Install AWS CDK (for deploying infrastructure):
+### For Binary Distribution Infrastructure
+
+If working on the AWS deployment system:
+
+1. Open the workspace file (`repo.code-workspace`) in your IDE
+2. Install dependencies:
+   ```bash
+   cd infra && uv sync && cd ..
+   ```
+3. Install AWS CDK: `npm install -g aws-cdk`
+4. Configure AWS CLI with appropriate permissions
+
+**Note**: Binaries are automatically built and deployed via GitHub Actions. Manual deployment is rarely needed.
+
+### Testing Binary Distribution Endpoints
+
+The binary distribution system provides three endpoints for testing:
+
 ```bash
-npm install -g aws-cdk
+# Test the /list endpoint - shows available binaries
+curl -s https://kkklfsac6b.execute-api.us-east-1.amazonaws.com/prod/list | jq
+
+# Test the /install endpoint - returns installation script
+curl -s https://kkklfsac6b.execute-api.us-east-1.amazonaws.com/prod/install
+
+# Test the /download endpoint - downloads binary for current platform
+curl -L -o appinit https://kkklfsac6b.execute-api.us-east-1.amazonaws.com/prod/download
+
+# Test download with specific platform/architecture
+curl -L -o appinit-linux https://kkklfsac6b.execute-api.us-east-1.amazonaws.com/prod/download?platform=linux&arch=amd64
+curl -L -o appinit-mac-arm https://kkklfsac6b.execute-api.us-east-1.amazonaws.com/prod/download?platform=darwin&arch=arm64
+
+# Test the complete installation flow
+curl -fsSL https://kkklfsac6b.execute-api.us-east-1.amazonaws.com/prod/install | sh
 ```
 
 ## Development
