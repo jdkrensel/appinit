@@ -1,30 +1,18 @@
 import aws_cdk as cdk
-# from aws_cdk import Environment
-# from stacks.service_stack import ServiceStack
-# from config import load_config
+from aws_cdk import Environment
+from stacks.binary_distribution_stack import BinaryDistributionStack
+import os
 
 app = cdk.App()
 
-# staging_cfg = load_config("staging")
-# ServiceStack(
-#     app,
-#     "staging",
-#     config=staging_cfg,
-#     env=Environment(
-#         account=staging_cfg["account"],
-#         region=staging_cfg["region"]
-#     ),
-# )
-
-# prod_cfg = load_config("prod")
-# ServiceStack(
-#     app,
-#     "prod",
-#     config=prod_cfg,
-#     env=Environment(
-#         account=prod_cfg["account"],
-#         region=prod_cfg["region"]
-#     ),
-# )
+# Deploy binary distribution infrastructure
+BinaryDistributionStack(
+    app,
+    "AppInitBinaryDistribution",
+    env=Environment(
+        account=os.environ.get('CDK_DEFAULT_ACCOUNT'),
+        region=os.environ.get('CDK_DEFAULT_REGION', 'us-east-1')
+    ),
+)
 
 app.synth()
