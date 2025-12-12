@@ -12,6 +12,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "boto3-stubs[s3]>=1.42.8",
     "ipython>=9.8.0",
     "jupyterlab>=4.5.0",
     "pytest>=9.0.2",
@@ -21,3 +22,7 @@ dev = [
 
 [tool.ruff]
 line-length = 120
+
+[tool.basedpyright]
+reportAny = false
+reportExplicitAny = false
