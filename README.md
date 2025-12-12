@@ -4,9 +4,44 @@ CLI tool to scaffold new projects with a standardized directory structure for ap
 
 ## Installation
 
-### Quick Install (Recommended)
+### Download Binary (Recommended)
+
+Choose the command for your platform:
+
+**macOS (Apple Silicon / M1/M2/M3)**
 ```bash
-curl -sSL https://kkklfsac6b.execute-api.us-east-1.amazonaws.com/prod/install | bash
+curl -L $(cd infra && uv run awscurl --service execute-api "https://8o62fpbbn5.execute-api.us-east-1.amazonaws.com/prod/download?platform=darwin&arch=arm64" | jq -r .url) -o appinit && chmod +x appinit && sudo mv appinit /usr/local/bin/
+```
+
+**macOS (Intel)**
+```bash
+curl -L $(cd infra && uv run awscurl --service execute-api "https://8o62fpbbn5.execute-api.us-east-1.amazonaws.com/prod/download?platform=darwin&arch=amd64" | jq -r .url) -o appinit && chmod +x appinit && sudo mv appinit /usr/local/bin/
+```
+
+**Linux (x86_64 / amd64)**
+```bash
+curl -L $(cd infra && uv run awscurl --service execute-api "https://8o62fpbbn5.execute-api.us-east-1.amazonaws.com/prod/download?platform=linux&arch=amd64" | jq -r .url) -o appinit && chmod +x appinit && sudo mv appinit /usr/local/bin/
+```
+
+**Linux (ARM64 / aarch64)**
+```bash
+curl -L $(cd infra && uv run awscurl --service execute-api "https://8o62fpbbn5.execute-api.us-east-1.amazonaws.com/prod/download?platform=linux&arch=arm64" | jq -r .url) -o appinit && chmod +x appinit && sudo mv appinit /usr/local/bin/
+```
+
+**Windows (x86_64)**
+```powershell
+# PowerShell
+$url = (cd infra; uv run awscurl --service execute-api "https://8o62fpbbn5.execute-api.us-east-1.amazonaws.com/prod/download?platform=windows&arch=amd64" | jq -r .url)
+curl -L $url -o appinit.exe
+# Move to a directory in your PATH
+```
+
+**Windows (ARM64)**
+```powershell
+# PowerShell
+$url = (cd infra; uv run awscurl --service execute-api "https://8o62fpbbn5.execute-api.us-east-1.amazonaws.com/prod/download?platform=windows&arch=arm64" | jq -r .url)
+curl -L $url -o appinit.exe
+# Move to a directory in your PATH
 ```
 
 ### Manual Build
@@ -75,24 +110,12 @@ If working on the AWS deployment system:
 
 ### Testing Binary Distribution Endpoints
 
-The binary distribution system provides three endpoints for testing:
-
 ```bash
-# Test the /list endpoint - shows available binaries
-curl -s https://kkklfsac6b.execute-api.us-east-1.amazonaws.com/prod/list | jq
+# List available binaries
+cd infra && uv run awscurl --service execute-api https://8o62fpbbn5.execute-api.us-east-1.amazonaws.com/prod/list | jq
 
-# Test the /install endpoint - returns installation script
-curl -s https://kkklfsac6b.execute-api.us-east-1.amazonaws.com/prod/install
-
-# Test the /download endpoint - downloads binary for current platform
-curl -L -o appinit https://kkklfsac6b.execute-api.us-east-1.amazonaws.com/prod/download
-
-# Test download with specific platform/architecture
-curl -L -o appinit-linux https://kkklfsac6b.execute-api.us-east-1.amazonaws.com/prod/download?platform=linux&arch=amd64
-curl -L -o appinit-mac-arm https://kkklfsac6b.execute-api.us-east-1.amazonaws.com/prod/download?platform=darwin&arch=arm64
-
-# Test the complete installation flow
-curl -fsSL https://kkklfsac6b.execute-api.us-east-1.amazonaws.com/prod/install | sh
+# Test download endpoint
+cd infra && uv run awscurl --service execute-api "https://8o62fpbbn5.execute-api.us-east-1.amazonaws.com/prod/download?platform=darwin&arch=arm64" | jq
 ```
 
 ## Development
