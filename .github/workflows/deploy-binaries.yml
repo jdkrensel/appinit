@@ -3,9 +3,11 @@ name: Deploy Binaries
 on:
   push:
     branches: [ main ]
+    paths: [ 'app/**' ]
   pull_request:
     branches: [ main ]
     types: [ closed ]
+    paths: [ 'app/**' ]
 
 jobs:
   deploy-binaries:
