@@ -99,7 +99,9 @@ class DependencyRefresher:
         return True
 
     def get_installed_version(self, package_name: str) -> str | None:
-        result = self.run_command(["uv", "pip", "show", package_name])
+        # Strip extras for version checking (e.g., "botocore[crt]" → "botocore")
+        base_package = package_name.split('[')[0]
+        result = self.run_command(["uv", "pip", "show", base_package])
         if isinstance(result, tuple) and result[0]:
             for line in result[1].split("\n"):
                 if line.startswith("Version:"):
