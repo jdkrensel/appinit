@@ -6,6 +6,7 @@ platform and architecture detection from query parameters or User-Agent headers.
 
 Environment Variables:
     BUCKET_NAME: Name of the S3 bucket containing the binaries
+    PRESIGNED_URL_EXPIRY: Presigned URL expiration time in seconds (default: 3600)
 
 Query Parameters:
     platform: Target platform (linux, darwin, windows)
@@ -18,16 +19,12 @@ Returns:
 
 import json
 import os
-from typing import Any, Literal, TYPE_CHECKING
+from typing import Any, Literal
 
 import boto3
 from botocore.exceptions import ClientError
 
-if TYPE_CHECKING:
-    from mypy_boto3_s3.client import S3Client
-
-
-s3_client: "S3Client" = boto3.client("s3")  # Module-level client for Lambda warm container reuse
+s3_client = boto3.client("s3")  # Module-level client for Lambda warm container reuse
 
 
 def _detect_platform_from_user_agent(user_agent: str) -> str:
@@ -63,7 +60,7 @@ def _detect_arch_from_user_agent(user_agent: str) -> str:
 
 def _get_platform_and_arch(event: dict[str, Any]) -> tuple[str, str]:
     """Extract or detect platform and architecture from request."""
-    query_params = event.get("queryStringParameters", {})
+    query_params = event.get("queryStringParameters") or {}
     platform = query_params.get("platform", "")
     arch = query_params.get("arch", "")
 
@@ -105,8 +102,10 @@ def lambda_handler(
     binary_key = _construct_binary_key(platform, arch)
 
     try:
-        download_url = s3_client.generate_presigned_url(
-            ClientMethod="get_object",
+        s3_client.head_object(Bucket=bucket_name, Key=binary_key)
+
+        presigned_url = s3_client.generate_presigned_url(
+            "get_object",
             Params={"Bucket": bucket_name, "Key": binary_key},
             ExpiresIn=presigned_url_expiry,
         )
@@ -114,18 +113,29 @@ def lambda_handler(
         return {
             "statusCode": 302,
             "headers": {
-                "Location": download_url,
-                "Content-Type": "application/octet-stream",
-                "Content-Disposition": f'attachment; filename="{binary_key}"',
+                "Location": presigned_url,
+                "Content-Type": "application/json",
             },
+            "body": json.dumps({"url": presigned_url}),
         }
-    except (ClientError, Exception):
+    except ClientError as e:
+        if e.response["Error"]["Code"] in ("NoSuchKey", "404"):
+            return {
+                "statusCode": 404,
+                "body": json.dumps(
+                    {
+                        "error": f"Binary not found for {platform}/{arch}",
+                        "available_binaries": "Check /list endpoint",
+                    }
+                ),
+            }
+        else:
+            return {
+                "statusCode": 500,
+                "body": json.dumps({"error": "Internal server error"}),
+            }
+    except Exception:
         return {
-            "statusCode": 404,
-            "body": json.dumps(
-                {
-                    "error": f"Binary not found for {platform}/{arch}",
-                    "available_binaries": "Check /list endpoint",
-                }
-            ),
+            "statusCode": 500,
+            "body": json.dumps({"error": "Internal server error"}),
         }

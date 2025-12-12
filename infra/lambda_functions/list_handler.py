@@ -13,20 +13,15 @@ Returns:
 
 import json
 import os
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
 import boto3
 from botocore.exceptions import ClientError
 
-if TYPE_CHECKING:
-    from mypy_boto3_s3.client import S3Client
-    from mypy_boto3_s3.type_defs import ListObjectsV2OutputTypeDef, ObjectTypeDef
+s3_client = boto3.client("s3")  # Module-level client for Lambda warm container reuse
 
 
-s3_client: "S3Client" = boto3.client("s3")  # Module-level client for Lambda warm container reuse
-
-
-def _format_binary_info(obj: "ObjectTypeDef") -> dict[str, Any]:
+def _format_binary_info(obj: dict[str, Any]) -> dict[str, Any]:
     """Format S3 object information for API response."""
     last_modified = obj.get("LastModified")
     return {
@@ -39,7 +34,7 @@ def _format_binary_info(obj: "ObjectTypeDef") -> dict[str, Any]:
 def _get_binaries_from_s3() -> list[dict[str, Any]]:
     """Retrieve and format binary information from S3 bucket."""
     bucket_name = os.environ["BUCKET_NAME"]
-    response: "ListObjectsV2OutputTypeDef" = s3_client.list_objects_v2(Bucket=bucket_name)
+    response = s3_client.list_objects_v2(Bucket=bucket_name)
     binaries: list[dict[str, Any]] = []
 
     if "Contents" in response:

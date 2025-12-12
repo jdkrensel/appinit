@@ -43,8 +43,7 @@ class LambdaConfig:
     def function_names(self) -> dict[str, str]:
         return {
             "download": "appinit-download-handler",
-            "list": "appinit-list-handler", 
-            "install": "appinit-install-handler"
+            "list": "appinit-list-handler",
         }
     
     @property
@@ -52,7 +51,6 @@ class LambdaConfig:
         return {
             "download": "download_handler.lambda_handler",
             "list": "list_handler.lambda_handler",
-            "install": "install_handler.lambda_handler"
         }
 
 

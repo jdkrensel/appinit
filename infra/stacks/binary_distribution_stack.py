@@ -18,6 +18,7 @@ from aws_cdk import (
     aws_lambda as _lambda,
     aws_apigateway as apigateway,
     aws_resourcegroups as resourcegroups,
+    aws_iam as iam,
     RemovalPolicy,
     Duration,
     Tags,
@@ -82,16 +83,6 @@ class BinaryDistributionStack(Stack):
         )
         _ = self.binary_bucket.grant_read(identity=self.list_lambda)
 
-        self.install_script_lambda: Function = _lambda.Function(
-            scope=self,
-            id="AppInitInstallHandler",
-            function_name=CONFIG.lambda_config.function_names["install"],
-            handler=CONFIG.lambda_config.handlers["install"],
-            runtime=CONFIG.lambda_config.runtime,
-            code=_lambda.Code.from_asset(CONFIG.lambda_config.code_path),
-            timeout=Duration.seconds(CONFIG.lambda_config.timeout_seconds),
-        )
-
         self.api: RestApi = apigateway.RestApi(
             scope=self,
             id="AppInitBinariesApi",
@@ -102,26 +93,34 @@ class BinaryDistributionStack(Stack):
                 allow_origins=apigateway.Cors.ALL_ORIGINS,
                 allow_methods=apigateway.Cors.ALL_METHODS,
             ),
+            policy=iam.PolicyDocument(
+                statements=[
+                    iam.PolicyStatement(
+                        effect=iam.Effect.ALLOW,
+                        principals=[iam.AnyPrincipal()],
+                        actions=["execute-api:Invoke"],
+                        resources=["execute-api:/*"],
+                        conditions={
+                            "StringEquals": {"aws:PrincipalAccount": [Stack.of(self).account]}
+                        },
+                    )
+                ]
+            ),
         )
 
         _ = self.api.root.add_resource(path_part="download").add_method(
             http_method="GET",
             integration=apigateway.LambdaIntegration(
-                handler=self.download_lambda, # pyright: ignore[reportArgumentType]
+                handler=self.download_lambda,  # pyright: ignore[reportArgumentType]
             ),
+            authorization_type=apigateway.AuthorizationType.IAM,
         )
         _ = self.api.root.add_resource(path_part="list").add_method(
             http_method="GET",
             integration=apigateway.LambdaIntegration(
-                handler=self.list_lambda, # pyright: ignore[reportArgumentType]
+                handler=self.list_lambda,  # pyright: ignore[reportArgumentType]
             ),
-        )
-        _ = self.api.root.add_resource(path_part="install").add_method(
-            http_method="GET",
-            integration=apigateway.LambdaIntegration(
-                handler=self.install_script_lambda, # pyright: ignore[reportArgumentType]
-                proxy=True,
-            ),
+            authorization_type=apigateway.AuthorizationType.IAM,
         )
 
         _ = resourcegroups.CfnGroup(
@@ -133,8 +132,13 @@ class BinaryDistributionStack(Stack):
                 type="TAG_FILTERS_1_0",
                 query=resourcegroups.CfnGroup.QueryProperty(
                     resource_type_filters=["AWS::AllSupported"],
-                    tag_filters=[resourcegroups.CfnGroup.TagFilterProperty(key="Project", values=[CONFIG.project.name])],
+                    tag_filters=[
+                        resourcegroups.CfnGroup.TagFilterProperty(key="Project", values=[CONFIG.project.name])
+                    ],
                 ),
             ),
-            tags=[{"key": "Project", "value": CONFIG.project.name}, {"key": "Component", "value": CONFIG.project.component}],
+            tags=[
+                {"key": "Project", "value": CONFIG.project.name},
+                {"key": "Component", "value": CONFIG.project.component},
+            ],
         )
