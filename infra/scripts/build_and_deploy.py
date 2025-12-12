@@ -1,6 +1,42 @@
 #!/usr/bin/env python3
-"""
-Build and deploy appinit binaries to S3
+"""AppInit Binary Build and Deployment Script.
+
+This module provides functionality to build Go binaries for multiple platforms
+and architectures, then deploy them to AWS S3 for distribution via the AppInit
+binary distribution system.
+
+The script supports cross-compilation for Linux, macOS, and Windows on both
+AMD64 and ARM64 architectures. It integrates with AWS CloudFormation to
+automatically discover the target S3 bucket and handles the complete build
+and upload pipeline.
+
+When to use this script:
+    - Manual testing of binary builds during development
+    - Emergency deployments when GitHub Actions is unavailable
+    - Initial deployment before GitHub Actions is configured
+    - Local development workflow for testing changes
+    - Debugging build or deployment issues
+    - One-off deployments outside the normal CI/CD pipeline
+
+Note: In production, binaries are automatically built and deployed via GitHub
+Actions on pushes to main branch or merged PRs (when app/ directory changes).
+This script serves as a backup deployment method.
+
+Typical usage example:
+    $ cd infra
+    $ uv run python scripts/build_and_deploy.py
+
+The script will:
+    1. Build binaries for all supported platforms
+    2. Query CloudFormation for the S3 bucket name
+    3. Upload all binaries with appropriate metadata
+    4. Provide deployment status and next steps
+
+Requirements:
+    - Go 1.19+ installed and in PATH
+    - AWS CLI configured with appropriate permissions
+    - CloudFormation stack 'AppInitBinaryDistribution' deployed
+    - boto3 and other dependencies installed
 """
 import subprocess
 import os
@@ -121,16 +157,8 @@ def main():
             break
     
     if not bucket_name:
-        # Fallback: try to find bucket by name pattern
-        s3 = boto3.client('s3')
-        try:
-            response = s3.list_buckets()
-            for bucket in response['Buckets']:
-                if 'appinit-binaries' in bucket['Name']:
-                    bucket_name = bucket['Name']
-                    break
-        except ClientError:
-            pass
+        # Fallback: use the known bucket name
+        bucket_name = "appinit-binaries"
     
     if not bucket_name:
         print("Error: Could not find S3 bucket. Make sure the stack is deployed.")
