@@ -37,3 +37,5 @@ wheels/
 .env.local
 dist/
 .env*
+
+cdk.out
